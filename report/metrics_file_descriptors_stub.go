@@ -15,9 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//go:build !linux && (!freebsd || !cgo)
+//go:build !linux && (!freebsd || !cgo) && !darwin
 // +build !linux
 // +build !freebsd !cgo
+// +build !darwin
 
 package report
 
