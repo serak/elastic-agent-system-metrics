@@ -87,7 +87,7 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 
 	err := taskInfo(pid, &info)
 	if err != nil {
-		return ProcState{}, fmt.Errorf("Could not read task for pid %d", pid)
+		return ProcState{}, fmt.Errorf("could not read task for pid %d", pid)
 	}
 
 	status := ProcState{}
@@ -152,9 +152,6 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, filter func(st
 }
 
 func getProcArgs(pid int, filter func(string) bool) ([]string, string, mapstr.M, error) {
-
-	exeName := ""
-
 	mib := []C.int{C.CTL_KERN, C.KERN_PROCARGS2, C.int(pid)}
 	argmax := uintptr(C.ARG_MAX)
 	buf := make([]byte, argmax)
@@ -166,24 +163,24 @@ func getProcArgs(pid int, filter func(string) bool) ([]string, string, mapstr.M,
 	bbuf := bytes.NewBuffer(buf)
 	bbuf.Truncate(int(argmax))
 
-	var argc int32                                // raw buffer
-	binary.Read(bbuf, binary.LittleEndian, &argc) // read length
+	var argc int32                                    // raw buffer
+	_ = binary.Read(bbuf, binary.LittleEndian, &argc) // read length
 
 	path, err := bbuf.ReadBytes(0)
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("Error reading the executable name: %w", err)
+		return nil, "", nil, fmt.Errorf("error reading the executable name: %w", err)
 	}
 
-	exeName = stripNullByte(path)
+	exeName := stripNullByte(path)
 
 	// skip trailing nul bytes
 	for {
 		c, err := bbuf.ReadByte()
 		if err != nil {
-			return nil, "", nil, fmt.Errorf("Error skipping nul values in KERN_PROCARGS2 buffer: %w", err)
+			return nil, "", nil, fmt.Errorf("error skipping nul values in KERN_PROCARGS2 buffer: %w", err)
 		}
 		if c != 0 {
-			bbuf.UnreadByte()
+			_ = bbuf.UnreadByte()
 			break
 		}
 	}
@@ -241,14 +238,13 @@ func taskInfo(pid int, info *C.struct_proc_taskallinfo) error {
 
 func sysctl(mib []C.int, old *byte, oldlen *uintptr,
 	new *byte, newlen uintptr) (err error) {
-	var p0 unsafe.Pointer
-	p0 = unsafe.Pointer(&mib[0])
+	p0 := unsafe.Pointer(&mib[0])
 	_, _, e1 := syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(p0),
 		uintptr(len(mib)),
 		uintptr(unsafe.Pointer(old)), uintptr(unsafe.Pointer(oldlen)),
-		uintptr(unsafe.Pointer(new)), uintptr(newlen))
+		uintptr(unsafe.Pointer(new)), newlen)
 	if e1 != 0 {
 		err = e1
 	}
-	return
+	return err
 }
