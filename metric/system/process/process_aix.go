@@ -155,8 +155,11 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, filter func(st
 
 		args = append(args, stripNullByte(arg))
 	}
+
 	state.Args = args
-	state.Exe = args[0]
+	if len(args) > 0 {
+		state.Exe = args[0]
+	}
 
 	// get env vars
 	buf = make([]byte, 8192)
