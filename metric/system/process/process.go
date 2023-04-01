@@ -42,6 +42,8 @@ import (
 	sysinfotypes "github.com/elastic/go-sysinfo/types"
 )
 
+import "C"
+
 // ListStates is a wrapper that returns a list of processess with only the basic PID info filled out.
 func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 	init := Stats{
